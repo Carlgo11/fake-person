@@ -1,0 +1,26 @@
+{
+  "name": "@carlgo11/fake-person",
+  "version": "0.0.1",
+  "description": "Generate fake user data",
+  "main": "dist/index.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --import tsx src/index.ts",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Carlgo11/fake-person.git"
+  },
+  "private": false,
+  "type": "module",
+  "dependencies": {
+    "@faker-js/faker": "^9.6.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.10"
+  }
+}
