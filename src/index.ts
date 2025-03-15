@@ -25,21 +25,15 @@ export interface Person {
  * @param {string} [options.country] - The country for the fake person. Determines region-specific data.
  * @param {'male'|'female'} [options.sex] - The biological gender of the person. Defaults to a random gender if not specified.
  *
- * @returns {Promise<{
- *   name: string,
- *   gender: string,
- *   birthday: string,
- *   address: string,
- *   phoneNumber: string,
- *   country: string,
- * }>} A promise that resolves to an object representing the fake person.
+ * @returns {Promise<Person>} A promise that resolves to an object representing the fake person.
  * @since 0.0.1
+ * @see Person
  */
-const generateFakeUser = async ({lang = 'en', country, sex: _sex}: {
-  lang: string,
+export default async function generateFakePerson({lang = 'en', country, sex: _sex}: {
+  lang?: string,
   country: string,
   sex?: 'male' | 'female'
-}): Promise<Person> => {
+}): Promise<Person> {
 
   const faker = allFakers[lang as keyof typeof allFakers];
 
@@ -87,5 +81,3 @@ const generateFakeUser = async ({lang = 'en', country, sex: _sex}: {
     address,
   }
 }
-
-export default generateFakeUser;
