@@ -1,14 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2024",
-    "module": "nodenext",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "emitDeclarationOnly": true,
+    "declaration": true, // Enable declaration files generation
+    "outDir": "./dist",  // Output directory for the compiled JS files
+    "esModuleInterop": true, // Allow importing CommonJS modules
+    "moduleResolution": "node",
+    "target": "ES2022", // Specify target version
+    "module": "ES2022", // Use ES modules
+    "strict": true, // Enable strict type checking
     "declarationMap": true
   },
   "include": [
