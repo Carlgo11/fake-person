@@ -1,7 +1,6 @@
 /tmp
 /out-tsc
 .*
-*.js
 !.npmignore
 !.gitignore
 package-lock.json
