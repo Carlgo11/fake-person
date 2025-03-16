@@ -1,0 +1,56 @@
+name: Publish package
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Test code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+
+  publish:
+    name: Publish package
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        registry:
+          - gpr
+          - npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: ${{ matrix.registry == 'gpr' && 'https://npm.pkg.github.com/' || 'https://registry.npmjs.org/' }}
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Update package.json version
+        run: |
+          jq ".version = \"$VERSION\"" package.json > package.tmp.json
+          mv package.tmp.json package.json
+      - run: npm install
+      - run: npm run build
+      - name: Publish package
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ matrix.registry == 'gpr' && secrets.GITHUB_TOKEN || secrets.npm_token }}

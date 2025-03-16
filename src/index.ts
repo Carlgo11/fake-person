@@ -7,11 +7,21 @@ export interface Person {
   firstName: string;
   lastName: string;
   birthday: Date;
-  address: { street: string, city: string, state: string, country: string };
+  address: Address;
   phone: string;
   email: string;
   civicNo?: string;
 }
+
+export interface Address {
+  street: string,
+  city: string,
+  state: string,
+  country: Countries
+}
+
+export type Countries = 'Sweden' | 'Norway' | 'Spain';
+export type Sex = 'male' | 'female';
 
 /**
  * Generates a fake person.
@@ -29,16 +39,17 @@ export interface Person {
  * @since 0.0.1
  * @see Person
  */
-export default async function generateFakePerson({lang = 'en', country, sex: _sex}: {
-  lang?: string,
-  country: string,
-  sex?: 'male' | 'female'
+export default async function generateFakePerson({lang = 'en', country, sex: _sex, age}: {
+  lang?: keyof typeof allFakers,
+  country: Countries,
+  sex?: Sex,
+  age?: { min: number, max: number, mode: 'age' | 'year' }
 }): Promise<Person> {
 
   const faker = allFakers[lang as keyof typeof allFakers];
 
   // Set random sex if not defined
-  const sex = _sex || faker.person.sex() as 'male' | 'female';
+  const sex = _sex || faker.person.sex() as Sex;
 
   const firstName = faker.person.firstName(sex)
   const lastName = faker.person.lastName(sex)
@@ -50,7 +61,7 @@ export default async function generateFakePerson({lang = 'en', country, sex: _se
     country,
   }
 
-  let birthday = faker.date.birthdate({min: 18, max: 100, mode: 'age'});
+  let birthday = faker.date.birthdate(age);
   const phone = faker.phone.number({style: 'international'});
   const email = faker.internet.email({firstName, lastName})
   let civicNo: string | undefined;
@@ -68,7 +79,7 @@ export default async function generateFakePerson({lang = 'en', country, sex: _se
       civicNo = await NorwegianCivicNo(birthday, sex);
       break;
     default:
-      throw new Error('Unsupported country');
+      console.error('Unsupported country');
   }
 
   return {

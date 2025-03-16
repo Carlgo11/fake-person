@@ -1,6 +1,8 @@
+import {Sex} from "../index.js";
+
 const options = ['Fodselsnummer', 'DNummer']
 
-export default async function generateCivicNo(birthday: Date, sex: 'male' | 'female') {
+export default async function generateCivicNo(birthday: Date, sex: Sex) {
   const option = options[Math.floor(Math.random() * options.length)];
   switch (option) {
     case 'Fodselsnummer':
@@ -10,7 +12,7 @@ export default async function generateCivicNo(birthday: Date, sex: 'male' | 'fem
   }
 }
 
-function generateFodselsnummer(birthDate: Date, gender: "male" | "female"): string {
+function generateFodselsnummer(birthDate: Date, gender: Sex): string {
   const day = String(birthDate.getDate()).padStart(2, '0');
   const month = String(birthDate.getMonth() + 1).padStart(2, '0');
   const year = String(birthDate.getFullYear()).slice(-2);
@@ -55,8 +57,8 @@ function generateFodselsnummer(birthDate: Date, gender: "male" | "female"): stri
     fodselsnummer = first9 + k1.toString() + k2.toString();
     break;
   }
-  if (!fodselsnummer) {
-    throw new Error("Unable to generate valid Norwegian fødselsnummer");
-  }
-  return fodselsnummer;
+
+  if (fodselsnummer) return fodselsnummer;
+
+  throw new Error("Unable to generate valid Norwegian fødselsnummer");
 }

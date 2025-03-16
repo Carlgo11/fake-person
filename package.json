@@ -1,6 +1,6 @@
 {
   "name": "@carlgo11/fake-person",
-  "version": "0.0.1",
+  "version": "dev",
   "description": "Generate fake user data",
   "main": "dist/index.js",
   "license": "MIT",

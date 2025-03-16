@@ -1,6 +1,8 @@
+import {Sex} from "../index.js";
+
 const options = ['Personnummer', 'Samordningsnummer', 'TFnummer']
 
-export default async function generateCivicNo(birthday: Date, sex: 'male' | 'female'): Promise<{
+export default async function generateCivicNo(birthday: Date, sex: Sex): Promise<{
   civicNo: string;
   birthDate: Date
 } | undefined> {
