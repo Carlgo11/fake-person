@@ -1,82 +1,101 @@
-import {Sex} from "../index.js";
+import { Sex } from "../index.js";
 
-const options = ['Personnummer', 'Samordningsnummer', 'TFnummer']
+// The three supported options.
+const options = ['Personnummer', 'Samordningsnummer', 'TFnummer'];
 
-export default async function generateCivicNo(birthday: Date, sex: Sex): Promise<{
-  civicNo: string;
-  birthDate: Date
-} | undefined> {
+/**
+ * Generates a Swedish civic number (either a Personnummer, Samordningsnummer, or TFnummer)
+ * based on the given birthday and sex. Only the generated civic number string is returned.
+ *
+ * @param birthday The person's birthday.
+ * @param sex The person's sex ("male" or "female").
+ * @returns A Promise resolving to a generated civic number string.
+ */
+export default async function generateCivicNo(birthday: Date, sex: Sex): Promise<string> {
+  // Pick a random option.
   const option = options[Math.floor(Math.random() * options.length)];
-  const [year, month, day] = [
-    birthday.getFullYear(),
-    ('0' + (birthday.getMonth() + 1)).slice(-2), // Adding leading zero to month
-    ('0' + birthday.getDate()).slice(-2), // Adding leading zero to day
-  ];
-  const _sex = sex === 'male' ? 1 : 0
-
   switch (option) {
     case 'Personnummer':
-      return (await fetchPN(`^${year}${month}${day}\\d*$`, _sex))[0] ||
-        (await fetchPN(`^${year}${month}\\d*$`,_sex))[0] ||
-        (await fetchPN(`^${year}\\d*$`, _sex))[0]
-
+      return generateSwedishPersonnummer(birthday, sex);
     case 'Samordningsnummer':
-      return (await fetchSN(`^${year}${month}\\d*$`,_sex))[0] ||
-        (await fetchSN(`^${year}\\d*$`, _sex))[0]
-
+      return generateSwedishSamordningsnummer(birthday, sex);
     case 'TFnummer':
-      return {
-        birthDate: birthday,
-        civicNo: `${year}${month}${day}TF${+!_sex + 1}${Math.floor(Math.random() * 10)}`,
-      }
+      return generateTFnummer(birthday, sex);
+    default:
+      throw new Error("Unsupported option");
   }
-
-  return undefined; // Return undefined if no result found
 }
 
-
-async function fetchPN(query: string, sex: 0 | 1) {
-  let res: { civicNo: string, birthDate: Date }[] = [];
-  const base = 'https://skatteverket.entryscape.net/rowstore/dataset/b4de7df7-63c0-4e7e-bb59-1f156a591763'
-  const req = await fetch(`${base}?testpersonnummer=${query}`, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-    }
-  })
-
-  const data = await req.json();
-  if (data && data.resultCount) {
-    data.results.map(async (result: { 'testpersonnummer': string }) => {
-      const civicNo = result['testpersonnummer'];
-      const match = civicNo.match(/^(\d{4})(\d{2})(\d{2})/) as RegExpMatchArray;
-      const [_, year, month, day] = match;
-      const birthDate = new Date(`${year}-${month}-${day} 00:00:00`)
-      if (parseInt(civicNo[10]) % 2 === sex) res.push({civicNo, birthDate})
-    })
-  }
-  return res;
+/**
+ * Generates a valid Swedish Personnummer.
+ * Format: YYYYMMDDNNNC, where NNC is a three-digit serial with the last digit encoding gender,
+ * and C is the Luhn check digit computed on the 9-digit short form (YYMMDDNNN).
+ */
+function generateSwedishPersonnummer(birthday: Date, sex: Sex): string {
+  const yearFull = birthday.getFullYear();
+  const month = ('0' + (birthday.getMonth() + 1)).slice(-2);
+  const day = ('0' + birthday.getDate()).slice(-2);
+  const base = `${yearFull}${month}${day}`;
+  // Generate a random two-digit prefix for the serial part.
+  const serialPrefix = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+  // Choose a gender digit: odd for male, even for female.
+  const possibleGenderDigits = sex === 'male' ? [1, 3, 5, 7, 9] : [0, 2, 4, 6, 8];
+  const genderDigit = possibleGenderDigits[Math.floor(Math.random() * possibleGenderDigits.length)];
+  const serial = serialPrefix + genderDigit; // three-digit serial
+  // Create short form: YYMMDD + serial.
+  const shortForm = `${String(yearFull).slice(-2)}${month}${day}${serial}`;
+  const checkDigit = computeLuhnCheckDigit(shortForm);
+  return `${base}${serial}${checkDigit}`;
 }
 
-async function fetchSN(query: string, sex: 0|1) {
-  let res: { civicNo: string, birthDate: Date }[] = [];
-  const base = 'https://skatteverket.entryscape.net/rowstore/dataset/9f29fe09-4dbc-4d2f-848f-7cffdd075383'
-  const req = await fetch(`${base}?testsamordningsnummer=${query}`, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-    }
-  })
+/**
+ * Generates a valid Swedish Samordningsnummer.
+ * Samordningsnummer is similar to Personnummer, except that the day is offset by 60.
+ * Format: YYYYMM(Day+60)NNNC.
+ */
+function generateSwedishSamordningsnummer(birthday: Date, sex: Sex): string {
+  const yearFull = birthday.getFullYear();
+  const month = ('0' + (birthday.getMonth() + 1)).slice(-2);
+  // Offset the day by 60.
+  const actualDay = birthday.getDate();
+  const dayOffset = actualDay + 60;
+  const dayStr = ('0' + dayOffset).slice(-2);
+  const base = `${yearFull}${month}${dayStr}`;
+  const serialPrefix = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+  const possibleGenderDigits = sex === 'male' ? [1, 3, 5, 7, 9] : [0, 2, 4, 6, 8];
+  const genderDigit = possibleGenderDigits[Math.floor(Math.random() * possibleGenderDigits.length)];
+  const serial = serialPrefix + genderDigit;
+  const shortForm = `${String(yearFull).slice(-2)}${month}${dayStr}${serial}`;
+  const checkDigit = computeLuhnCheckDigit(shortForm);
+  return `${base}${serial}${checkDigit}`;
+}
 
-  const data = await req.json();
-  if (data && data.resultCount) {
-    data.results.map(async (result: { 'testsamordningsnummer': string }) => {
-      const civicNo = result['testsamordningsnummer'];
-      const match = civicNo.match(/^(\d{4})(\d{2})(\d{2})/) as RegExpMatchArray;
-      const [_, year, month, day] = match;
-      const birthDate = new Date(`${year}-${month}-${parseInt(day) - 60} 00:00:00`)
-      if (parseInt(civicNo[10]) % 2 === sex) res.push({civicNo, birthDate})
-    })
+/**
+ * Generates a simple TFnummer.
+ * For simplicity, we generate a TFnummer in the form YYYYMMDDTF10 for males and TF20 for females.
+ */
+function generateTFnummer(birthday: Date, sex: Sex): string {
+  const yearFull = birthday.getFullYear();
+  const month = ('0' + (birthday.getMonth() + 1)).slice(-2);
+  const day = ('0' + birthday.getDate()).slice(-2);
+  const suffix = sex === 'male' ? '10' : '20';
+  return `${yearFull}${month}${day}TF${suffix}`;
+}
+
+/**
+ * Computes the Luhn check digit for a numeric string.
+ * Applies the Luhn algorithm to the input string of digits.
+ */
+function computeLuhnCheckDigit(digits: string): number {
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    let digit = parseInt(digits[i], 10);
+    // Double every other digit, starting at index 0.
+    if (i % 2 === 0) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
   }
-  return res;
+  return (10 - (sum % 10)) % 10;
 }

@@ -19,11 +19,36 @@ function generateDNI(): string {
 }
 
 function generateNIE(): string {
-  const prefixLetters = "XYZM"; // Possible prefix letters for NIE
-  const randomPrefix = prefixLetters.charAt(Math.floor(Math.random() * 3)); // Select a random prefix (X, Y, or Z)
-  const numberPart = String(Math.floor(Math.random() * 10000000)).padStart(7, '0'); // 7-digit number
-  const nieLetters = "TRWAGMYFPDXBNJZSQVHLCKE"; // Letters used for validation
-  const index = parseInt(numberPart, 10) % 23; // The same modulus operation as DNI
-  const letter = nieLetters.charAt(index); // Checksum letter
+  // Only valid prefixes for NIE are "X", "Y", or "Z"
+  const prefixLetters = "XYZ";
+  const randomPrefix = prefixLetters.charAt(Math.floor(Math.random() * 3));
+
+  // Convert prefix to its corresponding digit.
+  let prefixDigit: string;
+  switch (randomPrefix) {
+    case "X":
+      prefixDigit = "0";
+      break;
+    case "Y":
+      prefixDigit = "1";
+      break;
+    case "Z":
+      prefixDigit = "2";
+      break;
+    default:
+      prefixDigit = "0";
+  }
+
+  // Generate a 7-digit number.
+  const numberPart = String(Math.floor(Math.random() * 10000000)).padStart(7, '0');
+
+  // Concatenate the converted prefix with the number part.
+  const fullNumber = prefixDigit + numberPart;
+
+  // Compute the checksum letter.
+  const nieLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+  const index = parseInt(fullNumber, 10) % 23;
+  const letter = nieLetters.charAt(index);
+
   return randomPrefix + numberPart + letter;
 }

@@ -61,16 +61,14 @@ export default async function generateFakePerson({lang = 'en', country, sex: _se
     country,
   }
 
-  let birthday = faker.date.birthdate(age);
+  const birthday = faker.date.birthdate(age);
   const phone = faker.phone.number({style: 'international'});
   const email = faker.internet.email({firstName, lastName})
   let civicNo: string | undefined;
 
   switch (country) {
     case 'Sweden':
-      let {civicNo: _civicNo, birthDate} = await SwedishCivicNo(birthday, sex) as { civicNo: string, birthDate: Date }
-      civicNo = _civicNo
-      birthday = birthDate
+      civicNo = await SwedishCivicNo(birthday, sex)
       break;
     case 'Spain':
       civicNo = SpanishCivicNo()
